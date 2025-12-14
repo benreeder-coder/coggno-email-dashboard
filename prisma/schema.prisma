@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model EmailAccount {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  firstName             String?
+  lastName              String?
+  trackingDomainName    String?
+  trackingDomainStatus  String?
+  status                Int      @default(1)
+  warmupScore           Int      @default(100)
+  previousScore         Int?
+  timestampCreated      DateTime?
+  timestampUpdated      DateTime?
+  lastSyncedAt          DateTime @default(now())
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  domain                Domain?  @relation(fields: [domainId], references: [id])
+  domainId              String?
+
+  @@index([domainId])
+  @@index([warmupScore])
+}
+
+model Domain {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  averageScore  Float          @default(100)
+  accountCount  Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  accounts      EmailAccount[]
+
+  @@index([averageScore])
+}
+
+model Alert {
+  id          String      @id @default(cuid())
+  type        AlertType
+  entityType  EntityType
+  entityId    String
+  entityName  String
+  score       Float
+  threshold   Float       @default(97)
+  message     String
+  emailSent   Boolean     @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model SyncLog {
+  id            String   @id @default(cuid())
+  accountsCount Int
+  success       Boolean
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+}
+
+enum AlertType {
+  WARNING
+  CRITICAL
+}
+
+enum EntityType {
+  ACCOUNT
+  DOMAIN
+}
