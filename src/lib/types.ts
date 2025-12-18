@@ -53,3 +53,27 @@ export interface Stats {
   critical: number;
   lastSyncAt: string | null;
 }
+
+export interface Campaign {
+  id: string;
+  campaignId: string;
+  name: string;
+  status: number;
+  isEvergreen: boolean;
+  leadsCount: number;
+  contactedCount: number;
+  emailsSentCount: number;
+  newLeadsContactedCount: number;
+  openCount: number;
+  replyCount: number;
+  replyCountUnique: number;
+  linkClickCount: number;
+  bouncedCount: number;
+  unsubscribedCount: number;
+  completedCount: number;
+  totalOpportunities: number;
+  totalOpportunityValue: number;
+  lastSyncedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -20,7 +20,7 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="rounded-xl border border-[#262626] bg-[#1a1a1a] p-6"
+            className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="h-6 w-32 bg-[#262626] rounded shimmer" />
@@ -35,11 +35,11 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
 
   if (domains.length === 0) {
     return (
-      <div className="rounded-xl border border-[#262626] bg-[#1a1a1a] p-12 text-center">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-12 text-center">
         <svg className="w-16 h-16 mx-auto text-[#333] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
         </svg>
-        <p className="text-[#666]">No domains found. Data will appear after the first webhook sync.</p>
+        <p className="text-[var(--muted-text)]">No domains found. Data will appear after the first webhook sync.</p>
       </div>
     );
   }
@@ -49,23 +49,22 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
       {sortedDomains.map((domain) => (
         <div
           key={domain.id}
-          className="group relative rounded-xl border border-[#262626] bg-[#1a1a1a] overflow-hidden transition-all duration-300 cursor-pointer hover:border-[#8b5cf6]/30 hover:shadow-lg hover:shadow-[#8b5cf6]/5"
+          className="group relative rounded-xl border border-[var(--border)] bg-[var(--card-background)] overflow-hidden transition-all duration-300 cursor-pointer hover:border-[#2869b0]/30 hover:shadow-lg hover:shadow-[#2869b0]/5"
           onClick={() => setExpandedDomain(expandedDomain === domain.id ? null : domain.id)}
         >
           {/* Gradient accent line */}
-          <div className={`absolute top-0 left-4 right-4 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-            domain.averageScore >= 97
-              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600'
-              : domain.averageScore >= 90
+          <div className={`absolute top-0 left-4 right-4 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${domain.averageScore >= 97
+            ? 'bg-gradient-to-r from-emerald-500 to-emerald-600'
+            : domain.averageScore >= 90
               ? 'bg-gradient-to-r from-amber-500 to-orange-500'
               : 'bg-gradient-to-r from-red-500 to-red-600'
-          }`} />
+            }`} />
 
           <div className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-white">{domain.name}</h3>
-                <p className="text-sm text-[#666]">{domain.accountCount} accounts</p>
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">{domain.name}</h3>
+                <p className="text-sm text-[var(--muted-text)]">{domain.accountCount} accounts</p>
               </div>
               <span
                 className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border ${getScoreBgColor(domain.averageScore)} ${getScoreColor(domain.averageScore)}`}
@@ -76,7 +75,7 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
 
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-xs text-[#666] uppercase tracking-wider mb-1">Avg Score</p>
+                <p className="text-xs text-[var(--muted-text)] uppercase tracking-wider mb-1">Avg Score</p>
                 <p className={`text-3xl font-semibold ${getScoreColor(domain.averageScore)}`}>
                   {domain.averageScore.toFixed(1)}%
                 </p>
@@ -115,7 +114,7 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
                     );
                   })()}
                 </div>
-                <div className="flex justify-between mt-1 text-xs text-[#666]">
+                <div className="flex justify-between mt-1 text-xs text-[var(--muted-text)]">
                   <span>{domain.accounts.filter(a => a.warmupScore >= 97).length} healthy</span>
                   <span>{domain.accounts.filter(a => a.warmupScore < 97).length} issues</span>
                 </div>
@@ -124,8 +123,8 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
 
             {/* Expanded view */}
             {expandedDomain === domain.id && (
-              <div className="mt-4 pt-4 border-t border-[#262626]">
-                <p className="text-xs text-[#666] uppercase tracking-wider mb-3">Account Scores</p>
+              <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                <p className="text-xs text-[var(--muted-text)] uppercase tracking-wider mb-3">Account Scores</p>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {domain.accounts
                     .sort((a, b) => a.warmupScore - b.warmupScore)
@@ -134,7 +133,7 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
                         key={account.email}
                         className="flex items-center justify-between text-sm py-1.5 px-2 rounded-lg hover:bg-[#262626]/50"
                       >
-                        <span className="text-[#a1a1aa] truncate flex-1 mr-2">{account.email}</span>
+                        <span className="text-[var(--muted-text)] truncate flex-1 mr-2">{account.email}</span>
                         <span className={`font-medium ${getScoreColor(account.warmupScore)}`}>
                           {account.warmupScore}%
                         </span>
@@ -144,7 +143,7 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
               </div>
             )}
 
-            <div className="mt-4 flex items-center justify-center text-[#666] text-xs">
+            <div className="mt-4 flex items-center justify-center text-[var(--muted-text)] text-xs">
               <svg
                 className={`w-4 h-4 transition-transform ${expandedDomain === domain.id ? 'rotate-180' : ''}`}
                 fill="none"

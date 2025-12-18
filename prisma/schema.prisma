@@ -67,6 +67,34 @@ model SyncLog {
   createdAt     DateTime @default(now())
 }
 
+model Campaign {
+  id                      String   @id @default(cuid())
+  campaignId              String   @unique
+  name                    String
+  status                  Int      @default(0)
+  isEvergreen             Boolean  @default(false)
+  leadsCount              Int      @default(0)
+  contactedCount          Int      @default(0)
+  emailsSentCount         Int      @default(0)
+  newLeadsContactedCount  Int      @default(0)
+  openCount               Int      @default(0)
+  replyCount              Int      @default(0)
+  replyCountUnique        Int      @default(0)
+  linkClickCount          Int      @default(0)
+  bouncedCount            Int      @default(0)
+  unsubscribedCount       Int      @default(0)
+  completedCount          Int      @default(0)
+  totalOpportunities      Int      @default(0)
+  totalOpportunityValue   Float    @default(0)
+  lastSyncedAt            DateTime @default(now())
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([status])
+  @@index([totalOpportunityValue])
+  @@index([replyCount])
+}
+
 enum AlertType {
   WARNING
   CRITICAL

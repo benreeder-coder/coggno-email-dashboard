@@ -1,23 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  /* Primary Colors */
-  --primary-purple: hsl(258, 90%, 66%);
-  --accent-purple: hsl(265, 85%, 50%);
-  --dark-purple: #6d28d9;
+  /* Primary Colors - Coggno Blue */
+  --primary-purple: #2869b0;
+  /* Coggno Blue */
+  --accent-purple: #4a8ad4;
+  /* Lighter Blue */
+  --dark-purple: #1a4d85;
+  /* Darker Blue */
 
   /* Background Colors */
-  --background: hsl(0, 0%, 4%);
-  --card-background: hsl(0, 0%, 10%);
-  --secondary-muted: hsl(0, 0%, 15%);
+  --background: #f8fafc;
+  /* Slate 50 */
+  --card-background: #ffffff;
+  /* White */
+  --secondary-muted: #f1f5f9;
+  /* Slate 100 */
 
   /* Text Colors */
-  --foreground: hsl(0, 0%, 100%);
-  --muted-text: hsl(0, 0%, 65%);
+  --foreground: #0f172a;
+  /* Slate 900 */
+  --muted-text: #64748b;
+  /* Slate 500 */
 
   /* Utility Colors */
-  --border: hsl(0, 0%, 15%);
-  --ring: hsl(258, 90%, 66%);
+  --border: #e2e8f0;
+  /* Slate 200 */
+  --ring: #2869b0;
   --destructive: hsl(0, 84%, 60%);
   --warning: hsl(45, 93%, 47%);
   --success: hsl(142, 76%, 36%);
@@ -26,6 +35,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card-background);
+  --color-border: var(--border);
+  --color-muted: var(--muted-text);
   --font-sans: "Poppins", "Inter", sans-serif;
   --font-mono: var(--font-geist-mono);
 }
@@ -60,11 +72,11 @@ body {
 
 /* Futuristic glow effects */
 .glow-purple {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 20px rgba(40, 105, 176, 0.4);
 }
 
 .glow-text {
-  text-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+  text-shadow: 0 0 20px rgba(40, 105, 176, 0.6);
 }
 
 /* Glassmorphism */
@@ -72,12 +84,12 @@ body {
   background: rgba(26, 26, 26, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(40, 105, 176, 0.1);
 }
 
 /* Gradient backgrounds */
 .gradient-bg {
-  background: linear-gradient(135deg, #0a0a0a 0%, #0f0a1a 50%, #0a0a0a 100%);
+  background: linear-gradient(135deg, #0a0a0a 0%, #0a111a 50%, #0a0a0a 100%);
   position: relative;
 }
 
@@ -89,9 +101,9 @@ body {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(ellipse at 10% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
-    radial-gradient(ellipse at 90% 90%, rgba(124, 58, 237, 0.06) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 50%, rgba(109, 40, 217, 0.03) 0%, transparent 60%);
+    radial-gradient(ellipse at 10% 10%, rgba(40, 105, 176, 0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 90% 90%, rgba(26, 77, 133, 0.06) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, rgba(40, 105, 176, 0.03) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
@@ -99,8 +111,8 @@ body {
 /* Animated grid pattern */
 .grid-pattern {
   background-image:
-    linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(40, 105, 176, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(40, 105, 176, 0.03) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
@@ -113,8 +125,8 @@ body {
 }
 
 .card:hover {
-  border-color: rgba(139, 92, 246, 0.3);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.1);
+  border-color: rgba(40, 105, 176, 0.3);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(40, 105, 176, 0.1);
 }
 
 /* Button styles */
@@ -129,7 +141,7 @@ body {
 }
 
 .btn-primary:hover {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 20px rgba(40, 105, 176, 0.5);
   transform: translateY(-1px);
 }
 
@@ -142,7 +154,7 @@ button:focus-visible {
 
 /* Table hover */
 tr:hover td {
-  background: rgba(139, 92, 246, 0.05);
+  background: rgba(40, 105, 176, 0.05);
 }
 
 /* Status indicators */
@@ -166,9 +178,12 @@ tr:hover td {
 
 /* Pulse animation */
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 5px currentColor;
   }
+
   50% {
     box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
   }
@@ -183,6 +198,7 @@ tr:hover td {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -220,6 +236,7 @@ tr:hover td {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

@@ -6,9 +6,10 @@ import { StatsCards } from '@/components/StatsCards';
 import { AccountsTable } from '@/components/AccountsTable';
 import { DomainsView } from '@/components/DomainsView';
 import { AlertsLog } from '@/components/AlertsLog';
-import { Stats, EmailAccount, Domain, Alert } from '@/lib/types';
+import { CampaignsView } from '@/components/CampaignsView';
+import { Stats, EmailAccount, Domain, Alert, Campaign } from '@/lib/types';
 
-type TabType = 'accounts' | 'domains' | 'alerts';
+type TabType = 'accounts' | 'domains' | 'campaigns' | 'alerts';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('accounts');
@@ -16,15 +17,17 @@ export default function Dashboard() {
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsRes, accountsRes, domainsRes, alertsRes] = await Promise.all([
+      const [statsRes, accountsRes, domainsRes, alertsRes, campaignsRes] = await Promise.all([
         fetch('/api/stats'),
         fetch('/api/accounts'),
         fetch('/api/domains'),
         fetch('/api/alerts'),
+        fetch('/api/campaigns'),
       ]);
 
       if (statsRes.ok) {
@@ -46,6 +49,11 @@ export default function Dashboard() {
         const alertsData = await alertsRes.json();
         setAlerts(alertsData);
       }
+
+      if (campaignsRes.ok) {
+        const campaignsData = await campaignsRes.json();
+        setCampaigns(campaignsData);
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -60,36 +68,37 @@ export default function Dashboard() {
   }, [fetchData]);
 
   const tabs: { id: TabType; label: string; count?: number }[] = [
+    { id: 'campaigns', label: 'Campaigns', count: campaigns.length },
     { id: 'accounts', label: 'Email Accounts', count: accounts.length },
     { id: 'domains', label: 'Domains', count: domains.length },
     { id: 'alerts', label: 'Alerts', count: alerts.filter(a => !a.resolvedAt).length },
   ];
 
   return (
-    <div className="min-h-screen gradient-bg grid-pattern">
+    <div className="min-h-screen bg-[var(--background)] grid-pattern">
       <div className="relative z-10">
         {/* Header */}
-        <header className="border-b border-[#262626] glass sticky top-0 z-50">
+        <header className="border-b border-[var(--border)] glass sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* Logo */}
-                <div className="w-11 h-11 relative">
+                <div className="w-auto h-11 relative">
                   <Image
-                    src="/logo.svg"
-                    alt="Logo"
-                    width={44}
+                    src="/coggno-logo.svg"
+                    alt="Coggno Logo"
+                    width={150}
                     height={44}
                     className="object-contain"
                     priority
                   />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-white tracking-tight">
-                    Email Warmup Health
+                  <h1 className="text-xl font-semibold text-[var(--foreground)] tracking-tight">
+                    Email Core Health
                   </h1>
-                  <p className="text-sm text-[#a1a1aa]">
-                    Instantly Account Monitor
+                  <p className="text-sm text-[var(--muted-text)]">
+                    Coggno Email Health Dashboard
                   </p>
                 </div>
               </div>
@@ -97,7 +106,7 @@ export default function Dashboard() {
               <button
                 onClick={fetchData}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#262626] text-[#a1a1aa] hover:text-[#8b5cf6] hover:border-[#8b5cf6]/50 transition-all duration-300 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--card-background)] border border-[#262626] text-[var(--muted-text)] hover:text-[#2869b0] hover:border-[#2869b0]/50 transition-all duration-300 disabled:opacity-50"
               >
                 <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -116,25 +125,23 @@ export default function Dashboard() {
           </section>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 mb-6 p-1 bg-[#1a1a1a] rounded-xl border border-[#262626] w-fit">
+          <div className="flex items-center gap-1 mb-6 p-1 bg-[var(--card-background)] rounded-xl border border-[#262626] w-fit overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/20'
-                    : 'text-[#a1a1aa] hover:text-white hover:bg-[#262626]'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
+                  ? 'bg-gradient-to-r from-[#2869b0] to-[#4a8ad4] text-[var(--foreground)] shadow-lg shadow-[#2869b0]/20'
+                  : 'text-[var(--muted-text)] hover:text-[var(--foreground)] hover:bg-[#262626]'
+                  }`}
               >
                 {tab.label}
                 {tab.count !== undefined && tab.count > 0 && (
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      activeTab === tab.id
-                        ? 'bg-white/20 text-white'
-                        : 'bg-[#262626] text-[#a1a1aa]'
-                    }`}
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${activeTab === tab.id
+                      ? 'bg-white/20 text-[var(--foreground)]'
+                      : 'bg-[#262626] text-[var(--muted-text)]'
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -153,6 +160,10 @@ export default function Dashboard() {
               <DomainsView domains={domains} loading={loading} />
             )}
 
+            {activeTab === 'campaigns' && (
+              <CampaignsView campaigns={campaigns} loading={loading} />
+            )}
+
             {activeTab === 'alerts' && (
               <AlertsLog alerts={alerts} loading={loading} />
             )}
@@ -162,22 +173,22 @@ export default function Dashboard() {
         {/* Footer */}
         <footer className="border-t border-[#262626] mt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#a1a1aa]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[var(--muted-text)]">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 relative">
+                <div className="w-auto h-5 relative">
                   <Image
-                    src="/logo.svg"
-                    alt="Logo"
-                    width={20}
+                    src="/coggno-logo.svg"
+                    alt="Coggno Logo"
+                    width={80}
                     height={20}
                     className="object-contain opacity-60"
                   />
                 </div>
-                <span>Email Warmup Health Dashboard</span>
+                <span>Coggno Email Health Dashboard</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[#666]">Webhook:</span>
-                <code className="text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded text-xs">/api/webhook</code>
+                <span className="text-[var(--muted-text)]">Webhook:</span>
+                <code className="text-[#2869b0] bg-[#2869b0]/10 px-2 py-0.5 rounded text-xs">/api/webhook</code>
               </div>
             </div>
           </div>

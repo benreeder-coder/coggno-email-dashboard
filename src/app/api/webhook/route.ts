@@ -17,8 +17,29 @@ interface N8nItem {
   stat_warmup_score?: number;
 }
 
+interface CampaignItem {
+  campaign_name: string;
+  campaign_id: string;
+  campaign_status: number;
+  campaign_is_evergreen: boolean;
+  leads_count: number;
+  contacted_count: number;
+  emails_sent_count: number;
+  new_leads_contacted_count: number;
+  open_count: number;
+  reply_count: number;
+  reply_count_unique: number;
+  link_click_count: number;
+  bounced_count: number;
+  unsubscribed_count: number;
+  completed_count: number;
+  total_opportunities: number;
+  total_opportunity_value: number;
+}
+
 interface N8nPayload {
-  items: N8nItem[];
+  items?: N8nItem[];
+  campaigns?: CampaignItem[];
 }
 
 export async function POST(request: NextRequest) {
@@ -40,8 +61,12 @@ export async function POST(request: NextRequest) {
     // Flatten all items from all payloads
     const allItems: N8nItem[] = payloads.flatMap(p => p.items || []);
 
-    if (allItems.length === 0) {
-      return NextResponse.json({ error: 'No items in payload' }, { status: 400 });
+    // Flatten all campaigns from all payloads
+    const allCampaigns: CampaignItem[] = payloads.flatMap(p => p.campaigns || []);
+
+    // Check if we have either items or campaigns
+    if (allItems.length === 0 && allCampaigns.length === 0) {
+      return NextResponse.json({ error: 'No items or campaigns in payload' }, { status: 400 });
     }
 
     const accountAlerts: Array<{ email: string; score: number; previousScore?: number }> = [];
@@ -192,6 +217,51 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Process campaigns
+    for (const campaign of allCampaigns) {
+      await prisma.campaign.upsert({
+        where: { campaignId: campaign.campaign_id },
+        update: {
+          name: campaign.campaign_name,
+          status: campaign.campaign_status,
+          isEvergreen: campaign.campaign_is_evergreen,
+          leadsCount: campaign.leads_count,
+          contactedCount: campaign.contacted_count,
+          emailsSentCount: campaign.emails_sent_count,
+          newLeadsContactedCount: campaign.new_leads_contacted_count,
+          openCount: campaign.open_count,
+          replyCount: campaign.reply_count,
+          replyCountUnique: campaign.reply_count_unique,
+          linkClickCount: campaign.link_click_count,
+          bouncedCount: campaign.bounced_count,
+          unsubscribedCount: campaign.unsubscribed_count,
+          completedCount: campaign.completed_count,
+          totalOpportunities: campaign.total_opportunities,
+          totalOpportunityValue: campaign.total_opportunity_value,
+          lastSyncedAt: new Date(),
+        },
+        create: {
+          campaignId: campaign.campaign_id,
+          name: campaign.campaign_name,
+          status: campaign.campaign_status,
+          isEvergreen: campaign.campaign_is_evergreen,
+          leadsCount: campaign.leads_count,
+          contactedCount: campaign.contacted_count,
+          emailsSentCount: campaign.emails_sent_count,
+          newLeadsContactedCount: campaign.new_leads_contacted_count,
+          openCount: campaign.open_count,
+          replyCount: campaign.reply_count,
+          replyCountUnique: campaign.reply_count_unique,
+          linkClickCount: campaign.link_click_count,
+          bouncedCount: campaign.bounced_count,
+          unsubscribedCount: campaign.unsubscribed_count,
+          completedCount: campaign.completed_count,
+          totalOpportunities: campaign.total_opportunities,
+          totalOpportunityValue: campaign.total_opportunity_value,
+        },
+      });
+    }
+
     // Log the sync
     await prisma.syncLog.create({
       data: {
@@ -202,7 +272,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      processed: allItems.length,
+      processed: {
+        accounts: allItems.length,
+        campaigns: allCampaigns.length,
+      },
       alerts: {
         accounts: accountAlerts.length,
         domains: domainAlerts.length,

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Email Warmup Health Dashboard",
-  description: "Monitor your Instantly email account warmup health scores",
+  title: "Coggno Email Health Dashboard",
+  description: "Monitor your Coggno email account warmup health scores",
   icons: {
     icon: "/favicon.svg",
   },
@@ -28,9 +28,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
-        className={`${poppins.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-white`}
+        className={`${poppins.variable} ${geistMono.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}
         style={{ fontFamily: "var(--font-poppins), Inter, sans-serif" }}
       >
         {children}

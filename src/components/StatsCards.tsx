@@ -18,9 +18,9 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       ),
-      gradient: 'from-[#8b5cf6] to-[#7c3aed]',
-      iconBg: 'bg-[#8b5cf6]/20',
-      textColor: 'text-[#8b5cf6]',
+      gradient: 'from-[#2869b0] to-[#4a8ad4]',
+      iconBg: 'bg-[#2869b0]/20',
+      textColor: 'text-[#2869b0]',
     },
     {
       label: 'Healthy',
@@ -66,7 +66,7 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="rounded-xl border border-[#262626] bg-[#1a1a1a] p-5"
+            className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="h-4 w-20 bg-[#262626] rounded shimmer" />
@@ -85,7 +85,7 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
         {cards.map((card, index) => (
           <div
             key={card.label}
-            className="group relative rounded-xl border border-[#262626] bg-[#1a1a1a] p-5 transition-all duration-300 hover:border-[#8b5cf6]/30 hover:shadow-lg hover:shadow-[#8b5cf6]/5"
+            className="group relative rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5 transition-all duration-300 hover:border-[#2869b0]/30 hover:shadow-lg hover:shadow-[#2869b0]/5"
             style={{ animationDelay: `${index * 100}ms` }}
           >
             {/* Gradient accent line */}
