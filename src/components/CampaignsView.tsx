@@ -56,6 +56,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<number | 'all'>('all');
+  const [daysFilter, setDaysFilter] = useState<number>(90); // Default to last 90 days
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -70,6 +71,15 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
     return campaigns
       .filter((campaign) => {
         if (statusFilter !== 'all' && campaign.status !== statusFilter) return false;
+
+        // Time filter
+        if (daysFilter < 365) { // If maxed out (365+), show all
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - daysFilter);
+          const campaignDate = new Date(campaign.createdAt);
+          if (campaignDate < cutoffDate) return false;
+        }
+
         if (search) {
           return campaign.name.toLowerCase().includes(search.toLowerCase());
         }
@@ -264,11 +274,12 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
                   tick={{ fill: '#666', fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
-                  height={60}
+                  height={80} // Increased height for rotated labels
+                  interval={0}
                 />
                 <YAxis tick={{ fill: '#666', fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
                 <Bar dataKey="sent" name="Sent" fill={CHART_COLORS.purple} radius={[4, 4, 0, 0]} />
                 <Bar dataKey="replies" name="Replies" fill={CHART_COLORS.emerald} radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -288,11 +299,12 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
                   tick={{ fill: '#666', fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
-                  height={60}
+                  height={80}
+                  interval={0}
                 />
                 <YAxis tick={{ fill: '#666', fontSize: 10 }} unit="%" />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
                 <Bar dataKey="replyRate" name="Reply Rate" fill={CHART_COLORS.blue} radius={[4, 4, 0, 0]} />
                 <Bar dataKey="positiveReplyRate" name="Positive Reply Rate" fill={CHART_COLORS.amber} radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -312,12 +324,13 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
                   tick={{ fill: '#666', fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
-                  height={60}
+                  height={80}
+                  interval={0}
                 />
                 <YAxis yAxisId="left" tick={{ fill: '#666', fontSize: 10 }} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fill: '#666', fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
                 <Bar yAxisId="left" dataKey="opportunities" name="Opportunities" fill={CHART_COLORS.amber} radius={[4, 4, 0, 0]} />
                 <Bar yAxisId="right" dataKey="value" name="Value ($)" fill={CHART_COLORS.emerald} radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -362,7 +375,8 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
       {/* Table */}
       <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] overflow-hidden">
         {/* Search and filters */}
-        <div className="p-4 border-b border-[var(--border)]">
+        <div className="p-4 border-b border-[var(--border)] space-y-4">
+          {/* Top Row: Search and Status Filter */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <svg
@@ -399,6 +413,27 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
                   {f.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Bottom Row: Time Range Slider */}
+          <div className="flex items-center gap-4 px-1">
+            <span className="text-sm text-[var(--muted-text)] whitespace-nowrap min-w-[80px]">
+              Time Range:
+            </span>
+            <div className="flex-1 flex items-center gap-4">
+              <input
+                type="range"
+                min="7"
+                max="365"
+                step="1"
+                value={daysFilter || 365}
+                onChange={(e) => setDaysFilter(parseInt(e.target.value))}
+                className="w-full h-2 bg-[var(--secondary-muted)] rounded-lg appearance-none cursor-pointer accent-[#2869b0]"
+              />
+              <span className="text-sm font-medium text-[var(--foreground)] whitespace-nowrap min-w-[100px] text-right">
+                {daysFilter >= 365 ? 'All Time' : `Last ${daysFilter} days`}
+              </span>
             </div>
           </div>
         </div>

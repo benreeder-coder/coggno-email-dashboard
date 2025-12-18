@@ -6,6 +6,7 @@ interface CampaignItem {
     campaign_id: string;
     campaign_status: number;
     campaign_is_evergreen: boolean;
+    timestamp_created?: string;
     leads_count: number;
     contacted_count: number;
     emails_sent_count: number;
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
                     totalOpportunities: campaign.total_opportunities,
                     totalOpportunityValue: campaign.total_opportunity_value,
                     lastSyncedAt: syncStartTime,
+                    createdAt: campaign.timestamp_created ? new Date(campaign.timestamp_created) : undefined,
                 },
                 create: {
                     campaignId: campaign.campaign_id,
@@ -101,6 +103,7 @@ export async function POST(request: NextRequest) {
                     totalOpportunities: campaign.total_opportunities,
                     totalOpportunityValue: campaign.total_opportunity_value,
                     lastSyncedAt: syncStartTime,
+                    createdAt: campaign.timestamp_created ? new Date(campaign.timestamp_created) : undefined,
                 },
             });
         }
