@@ -121,14 +121,7 @@ export async function POST(request: NextRequest) {
                 },
             });
 
-            // Track for alerts
             if (warmupScore < THRESHOLD) {
-                accountAlerts.push({
-                    email: item.email,
-                    score: warmupScore,
-                    previousScore,
-                });
-
                 // Check if an unresolved alert already exists for this account
                 const existingAlert = await prisma.alert.findFirst({
                     where: {
@@ -151,15 +144,28 @@ export async function POST(request: NextRequest) {
                             message: `Email account ${item.email} warmup score dropped to ${warmupScore}%`,
                         },
                     });
-                } else if (existingAlert.score !== warmupScore) {
-                    // Update the score on the existing alert if it changed
+
+                    accountAlerts.push({
+                        email: item.email,
+                        score: warmupScore,
+                        previousScore,
+                    });
+                } else if (Math.abs(existingAlert.score - warmupScore) >= 1) {
+                    // Update the score if it changed significantly and mark as not sent to re-trigger email
                     await prisma.alert.update({
                         where: { id: existingAlert.id },
                         data: {
                             score: warmupScore,
                             type: warmupScore < 90 ? 'CRITICAL' : 'WARNING',
                             message: `Email account ${item.email} warmup score dropped to ${warmupScore}%`,
+                            emailSent: false,
                         },
+                    });
+
+                    accountAlerts.push({
+                        email: item.email,
+                        score: warmupScore,
+                        previousScore,
                     });
                 }
             }
@@ -187,12 +193,6 @@ export async function POST(request: NextRequest) {
             });
 
             if (averageScore < THRESHOLD) {
-                domainAlerts.push({
-                    domain: domainName,
-                    averageScore,
-                    accountCount,
-                });
-
                 // Check if an unresolved alert already exists for this domain
                 const existingAlert = await prisma.alert.findFirst({
                     where: {
@@ -215,15 +215,28 @@ export async function POST(request: NextRequest) {
                             message: `Domain ${domainName} average warmup score dropped to ${averageScore.toFixed(1)}%`,
                         },
                     });
-                } else if (existingAlert.score !== averageScore) {
-                    // Update the score on the existing alert if it changed
+
+                    domainAlerts.push({
+                        domain: domainName,
+                        averageScore,
+                        accountCount,
+                    });
+                } else if (Math.abs(existingAlert.score - averageScore) >= 1) {
+                    // Update and re-trigger email
                     await prisma.alert.update({
                         where: { id: existingAlert.id },
                         data: {
                             score: averageScore,
                             type: averageScore < 90 ? 'CRITICAL' : 'WARNING',
                             message: `Domain ${domainName} average warmup score dropped to ${averageScore.toFixed(1)}%`,
+                            emailSent: false,
                         },
+                    });
+
+                    domainAlerts.push({
+                        domain: domainName,
+                        averageScore,
+                        accountCount,
                     });
                 }
             }
@@ -241,9 +254,7 @@ export async function POST(request: NextRequest) {
                 await prisma.alert.updateMany({
                     where: {
                         emailSent: false,
-                        createdAt: {
-                            gte: new Date(Date.now() - 60000),
-                        },
+                        resolvedAt: null,
                     },
                     data: {
                         emailSent: true,
