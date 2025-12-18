@@ -58,6 +58,12 @@ export async function POST(request: NextRequest) {
 
         // Process each email account
         for (const item of items) {
+            // Skip anything related to builderbenai as requested
+            if (item.email.toLowerCase().includes('builderbenai') ||
+                (item.tracking_domain_name && item.tracking_domain_name.toLowerCase().includes('builderbenai'))) {
+                continue;
+            }
+
             let domainName = extractDomain(item.tracking_domain_name);
 
             // Robust fallback: if domain is unknown/missing, parse from email

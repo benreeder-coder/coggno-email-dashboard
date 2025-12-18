@@ -62,6 +62,10 @@ export async function POST(request: NextRequest) {
         }
 
         for (const campaign of campaigns) {
+            // Skip anything related to builderbenai as requested
+            if (campaign.campaign_name.toLowerCase().includes('builderbenai')) {
+                continue;
+            }
             try {
                 // Sanitize numeric fields to defaults to prevent crashes
                 const sanitizeNum = (val: any) => typeof val === 'number' ? val : 0;
