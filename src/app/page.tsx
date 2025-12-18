@@ -165,7 +165,7 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'alerts' && (
-              <AlertsLog alerts={alerts} loading={loading} />
+              <AlertsLog alerts={alerts} loading={loading} onRefresh={fetchData} />
             )}
           </div>
         </main>
