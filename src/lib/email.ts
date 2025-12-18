@@ -97,8 +97,8 @@ export async function sendAlertEmail(data: AlertEmailData): Promise<boolean> {
 
   try {
     const { error } = await resend.emails.send({
-      from: 'Email Health <onboarding@resend.dev>',
-      to: alertEmail,
+      from: 'Email Health <benreeder@builderbenai.com>',
+      to: 'benreeder@builderbenai.com',
       subject: `Email Warmup Alert: ${data.accountAlerts.length} accounts, ${data.domainAlerts.length} domains below threshold`,
       html,
     });

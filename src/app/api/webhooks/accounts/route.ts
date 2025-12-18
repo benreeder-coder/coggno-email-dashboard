@@ -129,18 +129,39 @@ export async function POST(request: NextRequest) {
                     previousScore,
                 });
 
-                // Create alert record
-                await prisma.alert.create({
-                    data: {
-                        type: warmupScore < 90 ? 'CRITICAL' : 'WARNING',
+                // Check if an unresolved alert already exists for this account
+                const existingAlert = await prisma.alert.findFirst({
+                    where: {
                         entityType: 'ACCOUNT',
                         entityId: item.email,
-                        entityName: item.email,
-                        score: warmupScore,
-                        threshold: THRESHOLD,
-                        message: `Email account ${item.email} warmup score dropped to ${warmupScore}%`,
+                        resolvedAt: null,
                     },
                 });
+
+                if (!existingAlert) {
+                    // Create alert record
+                    await prisma.alert.create({
+                        data: {
+                            type: warmupScore < 90 ? 'CRITICAL' : 'WARNING',
+                            entityType: 'ACCOUNT',
+                            entityId: item.email,
+                            entityName: item.email,
+                            score: warmupScore,
+                            threshold: THRESHOLD,
+                            message: `Email account ${item.email} warmup score dropped to ${warmupScore}%`,
+                        },
+                    });
+                } else if (existingAlert.score !== warmupScore) {
+                    // Update the score on the existing alert if it changed
+                    await prisma.alert.update({
+                        where: { id: existingAlert.id },
+                        data: {
+                            score: warmupScore,
+                            type: warmupScore < 90 ? 'CRITICAL' : 'WARNING',
+                            message: `Email account ${item.email} warmup score dropped to ${warmupScore}%`,
+                        },
+                    });
+                }
             }
 
             // Aggregate domain scores
@@ -172,18 +193,39 @@ export async function POST(request: NextRequest) {
                     accountCount,
                 });
 
-                // Create domain alert
-                await prisma.alert.create({
-                    data: {
-                        type: averageScore < 90 ? 'CRITICAL' : 'WARNING',
+                // Check if an unresolved alert already exists for this domain
+                const existingAlert = await prisma.alert.findFirst({
+                    where: {
                         entityType: 'DOMAIN',
                         entityId: domainName,
-                        entityName: domainName,
-                        score: averageScore,
-                        threshold: THRESHOLD,
-                        message: `Domain ${domainName} average warmup score dropped to ${averageScore.toFixed(1)}%`,
+                        resolvedAt: null,
                     },
                 });
+
+                if (!existingAlert) {
+                    // Create domain alert
+                    await prisma.alert.create({
+                        data: {
+                            type: averageScore < 90 ? 'CRITICAL' : 'WARNING',
+                            entityType: 'DOMAIN',
+                            entityId: domainName,
+                            entityName: domainName,
+                            score: averageScore,
+                            threshold: THRESHOLD,
+                            message: `Domain ${domainName} average warmup score dropped to ${averageScore.toFixed(1)}%`,
+                        },
+                    });
+                } else if (existingAlert.score !== averageScore) {
+                    // Update the score on the existing alert if it changed
+                    await prisma.alert.update({
+                        where: { id: existingAlert.id },
+                        data: {
+                            score: averageScore,
+                            type: averageScore < 90 ? 'CRITICAL' : 'WARNING',
+                            message: `Domain ${domainName} average warmup score dropped to ${averageScore.toFixed(1)}%`,
+                        },
+                    });
+                }
             }
         }
 
