@@ -62,50 +62,58 @@ export async function POST(request: NextRequest) {
         }
 
         for (const campaign of campaigns) {
-            await prisma.campaign.upsert({
-                where: { campaignId: campaign.campaign_id },
-                update: {
-                    name: campaign.campaign_name,
-                    status: campaign.campaign_status,
-                    isEvergreen: campaign.campaign_is_evergreen,
-                    leadsCount: campaign.leads_count,
-                    contactedCount: campaign.contacted_count,
-                    emailsSentCount: campaign.emails_sent_count,
-                    newLeadsContactedCount: campaign.new_leads_contacted_count,
-                    openCount: campaign.open_count,
-                    replyCount: campaign.reply_count,
-                    replyCountUnique: campaign.reply_count_unique,
-                    linkClickCount: campaign.link_click_count,
-                    bouncedCount: campaign.bounced_count,
-                    unsubscribedCount: campaign.unsubscribed_count,
-                    completedCount: campaign.completed_count,
-                    totalOpportunities: campaign.total_opportunities,
-                    totalOpportunityValue: campaign.total_opportunity_value,
-                    lastSyncedAt: syncStartTime,
-                    createdAt: campaign.timestamp_created ? new Date(campaign.timestamp_created) : undefined,
-                },
-                create: {
-                    campaignId: campaign.campaign_id,
-                    name: campaign.campaign_name,
-                    status: campaign.campaign_status,
-                    isEvergreen: campaign.campaign_is_evergreen,
-                    leadsCount: campaign.leads_count,
-                    contactedCount: campaign.contacted_count,
-                    emailsSentCount: campaign.emails_sent_count,
-                    newLeadsContactedCount: campaign.new_leads_contacted_count,
-                    openCount: campaign.open_count,
-                    replyCount: campaign.reply_count,
-                    replyCountUnique: campaign.reply_count_unique,
-                    linkClickCount: campaign.link_click_count,
-                    bouncedCount: campaign.bounced_count,
-                    unsubscribedCount: campaign.unsubscribed_count,
-                    completedCount: campaign.completed_count,
-                    totalOpportunities: campaign.total_opportunities,
-                    totalOpportunityValue: campaign.total_opportunity_value,
-                    lastSyncedAt: syncStartTime,
-                    createdAt: campaign.timestamp_created ? new Date(campaign.timestamp_created) : undefined,
-                },
-            });
+            try {
+                // Sanitize numeric fields to defaults to prevent crashes
+                const sanitizeNum = (val: any) => typeof val === 'number' ? val : 0;
+
+                await prisma.campaign.upsert({
+                    where: { campaignId: campaign.campaign_id },
+                    update: {
+                        name: campaign.campaign_name || 'Untitled Campaign',
+                        status: typeof campaign.campaign_status === 'number' ? campaign.campaign_status : 0,
+                        isEvergreen: !!campaign.campaign_is_evergreen,
+                        leadsCount: sanitizeNum(campaign.leads_count),
+                        contactedCount: sanitizeNum(campaign.contacted_count),
+                        emailsSentCount: sanitizeNum(campaign.emails_sent_count),
+                        newLeadsContactedCount: sanitizeNum(campaign.new_leads_contacted_count),
+                        openCount: sanitizeNum(campaign.open_count),
+                        replyCount: sanitizeNum(campaign.reply_count),
+                        replyCountUnique: sanitizeNum(campaign.reply_count_unique),
+                        linkClickCount: sanitizeNum(campaign.link_click_count),
+                        bouncedCount: sanitizeNum(campaign.bounced_count),
+                        unsubscribedCount: sanitizeNum(campaign.unsubscribed_count),
+                        completedCount: sanitizeNum(campaign.completed_count),
+                        totalOpportunities: sanitizeNum(campaign.total_opportunities),
+                        totalOpportunityValue: sanitizeNum(campaign.total_opportunity_value),
+                        lastSyncedAt: syncStartTime,
+                        createdAt: campaign.timestamp_created ? new Date(campaign.timestamp_created) : undefined,
+                    },
+                    create: {
+                        campaignId: campaign.campaign_id,
+                        name: campaign.campaign_name || 'Untitled Campaign',
+                        status: typeof campaign.campaign_status === 'number' ? campaign.campaign_status : 0,
+                        isEvergreen: !!campaign.campaign_is_evergreen,
+                        leadsCount: sanitizeNum(campaign.leads_count),
+                        contactedCount: sanitizeNum(campaign.contacted_count),
+                        emailsSentCount: sanitizeNum(campaign.emails_sent_count),
+                        newLeadsContactedCount: sanitizeNum(campaign.new_leads_contacted_count),
+                        openCount: sanitizeNum(campaign.open_count),
+                        replyCount: sanitizeNum(campaign.reply_count),
+                        replyCountUnique: sanitizeNum(campaign.reply_count_unique),
+                        linkClickCount: sanitizeNum(campaign.link_click_count),
+                        bouncedCount: sanitizeNum(campaign.bounced_count),
+                        unsubscribedCount: sanitizeNum(campaign.unsubscribed_count),
+                        completedCount: sanitizeNum(campaign.completed_count),
+                        totalOpportunities: sanitizeNum(campaign.total_opportunities),
+                        totalOpportunityValue: sanitizeNum(campaign.total_opportunity_value),
+                        lastSyncedAt: syncStartTime,
+                        createdAt: campaign.timestamp_created ? new Date(campaign.timestamp_created) : undefined,
+                    },
+                });
+            } catch (itemError) {
+                console.error(`Failed to sync campaign ${campaign.campaign_id}:`, itemError);
+                // Continue processing other items so the sync doesn't fail completely
+            }
         }
 
         // ---------------------------------------------------------
