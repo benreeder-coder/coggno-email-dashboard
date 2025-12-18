@@ -56,7 +56,15 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<number | 'all'>('all');
-  const [daysFilter, setDaysFilter] = useState<number>(90); // Default to last 90 days
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
+
+  // Common chart props
+  const commonChartProps = {
+    margin: { top: 5, right: 5, left: 5, bottom: 40 },
+  };
+
+  const xAxisTickProps = { fill: '#666', fontSize: 10 };
+  const expandedXAxisTickProps = { fill: '#666', fontSize: 12 };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -72,13 +80,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
       .filter((campaign) => {
         if (statusFilter !== 'all' && campaign.status !== statusFilter) return false;
 
-        // Time filter
-        if (daysFilter < 365) { // If maxed out (365+), show all
-          const cutoffDate = new Date();
-          cutoffDate.setDate(cutoffDate.getDate() - daysFilter);
-          const campaignDate = new Date(campaign.createdAt);
-          if (campaignDate < cutoffDate) return false;
-        }
+
 
         if (search) {
           return campaign.name.toLowerCase().includes(search.toLowerCase());
@@ -218,6 +220,82 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
     return null;
   };
 
+  // Modal for expanded chart
+  const ExpandedChartModal = () => {
+    if (!expandedChart) return null;
+
+    const renderChart = () => {
+      switch (expandedChart) {
+        case 'sent-replies':
+          return (
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="name" tick={expandedXAxisTickProps} angle={-45} textAnchor="end" height={120} interval={0} />
+              <YAxis tick={{ fill: '#666', fontSize: 12 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
+              <Bar dataKey="sent" name="Sent" fill={CHART_COLORS.purple} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="replies" name="Replies" fill={CHART_COLORS.emerald} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          );
+        case 'reply-rates':
+          return (
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="name" tick={expandedXAxisTickProps} angle={-45} textAnchor="end" height={120} interval={0} />
+              <YAxis tick={{ fill: '#666', fontSize: 12 }} unit="%" />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
+              <Bar dataKey="replyRate" name="Reply Rate" fill={CHART_COLORS.blue} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="positiveReplyRate" name="Positive Reply Rate" fill={CHART_COLORS.amber} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          );
+        case 'opportunities':
+          return (
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="name" tick={expandedXAxisTickProps} angle={-45} textAnchor="end" height={120} interval={0} />
+              <YAxis yAxisId="left" tick={{ fill: '#666', fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fill: '#666', fontSize: 12 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
+              <Bar yAxisId="left" dataKey="opportunities" name="Opportunities" fill={CHART_COLORS.amber} radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="right" dataKey="value" name="Value ($)" fill={CHART_COLORS.emerald} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          );
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setExpandedChart(null)}>
+        <div className="bg-[var(--card-background)] rounded-2xl w-full max-w-6xl h-[80vh] p-6 shadow-2xl relative flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-[var(--foreground)]">
+              {expandedChart === 'sent-replies' ? 'Emails Sent vs Replies by Campaign' :
+                expandedChart === 'reply-rates' ? 'Reply Rate vs Positive Reply Rate' :
+                  'Opportunities & Pipeline Value'}
+            </h3>
+            <button
+              onClick={() => setExpandedChart(null)}
+              className="p-2 hover:bg-[var(--secondary-muted)] rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6 text-[var(--muted-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 w-full min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              {renderChart()}
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] overflow-hidden">
@@ -232,6 +310,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
 
   return (
     <div className="space-y-6">
+      <ExpandedChartModal />
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-4">
@@ -263,20 +342,24 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Sends & Replies by Campaign */}
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5">
-          <h3 className="text-[var(--foreground)] font-medium mb-4">Emails Sent vs Replies by Campaign</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5 relative group">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-[var(--foreground)] font-medium">Emails Sent vs Replies by Campaign</h3>
+            <button
+              onClick={() => setExpandedChart('sent-replies')}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-[var(--secondary-muted)] rounded-md text-[var(--muted-text)] hover:text-[var(--foreground)]"
+              title="Expand Chart"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            </button>
+          </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <BarChart data={chartData} margin={commonChartProps.margin}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: '#666', fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80} // Increased height for rotated labels
-                  interval={0}
-                />
+                <XAxis dataKey="name" tick={xAxisTickProps} angle={-45} textAnchor="end" height={80} interval={0} />
                 <YAxis tick={{ fill: '#666', fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
@@ -288,20 +371,24 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
         </div>
 
         {/* Reply Rate & Positive Reply Rate */}
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5">
-          <h3 className="text-[var(--foreground)] font-medium mb-4">Reply Rate vs Positive Reply Rate</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5 relative group">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-[var(--foreground)] font-medium">Reply Rate vs Positive Reply Rate</h3>
+            <button
+              onClick={() => setExpandedChart('reply-rates')}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-[var(--secondary-muted)] rounded-md text-[var(--muted-text)] hover:text-[var(--foreground)]"
+              title="Expand Chart"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            </button>
+          </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <BarChart data={chartData} margin={commonChartProps.margin}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: '#666', fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  interval={0}
-                />
+                <XAxis dataKey="name" tick={xAxisTickProps} angle={-45} textAnchor="end" height={80} interval={0} />
                 <YAxis tick={{ fill: '#666', fontSize: 10 }} unit="%" />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px' }} verticalAlign="top" />
@@ -313,20 +400,24 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
         </div>
 
         {/* Opportunities & Value */}
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5">
-          <h3 className="text-[var(--foreground)] font-medium mb-4">Opportunities & Pipeline Value</h3>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-5 relative group">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-[var(--foreground)] font-medium">Opportunities & Pipeline Value</h3>
+            <button
+              onClick={() => setExpandedChart('opportunities')}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-[var(--secondary-muted)] rounded-md text-[var(--muted-text)] hover:text-[var(--foreground)]"
+              title="Expand Chart"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            </button>
+          </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <BarChart data={chartData} margin={commonChartProps.margin}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: '#666', fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  interval={0}
-                />
+                <XAxis dataKey="name" tick={xAxisTickProps} angle={-45} textAnchor="end" height={80} interval={0} />
                 <YAxis yAxisId="left" tick={{ fill: '#666', fontSize: 10 }} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fill: '#666', fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
@@ -416,184 +507,164 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
             </div>
           </div>
 
-          {/* Bottom Row: Time Range Slider */}
-          <div className="flex items-center gap-4 px-1">
-            <span className="text-sm text-[var(--muted-text)] whitespace-nowrap min-w-[80px]">
-              Time Range:
-            </span>
-            <div className="flex-1 flex items-center gap-4">
-              <input
-                type="range"
-                min="7"
-                max="365"
-                step="1"
-                value={daysFilter || 365}
-                onChange={(e) => setDaysFilter(parseInt(e.target.value))}
-                className="w-full h-2 bg-[var(--secondary-muted)] rounded-lg appearance-none cursor-pointer accent-[#2869b0]"
-              />
-              <span className="text-sm font-medium text-[var(--foreground)] whitespace-nowrap min-w-[100px] text-right">
-                {daysFilter >= 365 ? 'All Time' : `Last ${daysFilter} days`}
-              </span>
-            </div>
-          </div>
         </div>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--background)]">
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('name')}
-                >
-                  Campaign
-                  <SortIcon active={sortKey === 'name'} order={sortKey === 'name' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('status')}
-                >
-                  Status
-                  <SortIcon active={sortKey === 'status'} order={sortKey === 'status' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('emailsSentCount')}
-                >
-                  Sent
-                  <SortIcon active={sortKey === 'emailsSentCount'} order={sortKey === 'emailsSentCount' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('newLeadsContactedCount')}
-                >
-                  Leads
-                  <SortIcon active={sortKey === 'newLeadsContactedCount'} order={sortKey === 'newLeadsContactedCount' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('replyCount')}
-                >
-                  Replies
-                  <SortIcon active={sortKey === 'replyCount'} order={sortKey === 'replyCount' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('replyRate')}
-                >
-                  Reply %
-                  <SortIcon active={sortKey === 'replyRate'} order={sortKey === 'replyRate' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('positiveReplyRate')}
-                >
-                  Positive %
-                  <SortIcon active={sortKey === 'positiveReplyRate'} order={sortKey === 'positiveReplyRate' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('bounceRate')}
-                >
-                  Bounce %
-                  <SortIcon active={sortKey === 'bounceRate'} order={sortKey === 'bounceRate' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('totalOpportunities')}
-                >
-                  Opps
-                  <SortIcon active={sortKey === 'totalOpportunities'} order={sortKey === 'totalOpportunities' ? sortOrder : 'asc'} />
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
-                  onClick={() => handleSort('totalOpportunityValue')}
-                >
-                  Value
-                  <SortIcon active={sortKey === 'totalOpportunityValue'} order={sortKey === 'totalOpportunityValue' ? sortOrder : 'asc'} />
-                </th>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-[var(--border)] bg-[var(--background)]">
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('name')}
+              >
+                Campaign
+                <SortIcon active={sortKey === 'name'} order={sortKey === 'name' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('status')}
+              >
+                Status
+                <SortIcon active={sortKey === 'status'} order={sortKey === 'status' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('emailsSentCount')}
+              >
+                Sent
+                <SortIcon active={sortKey === 'emailsSentCount'} order={sortKey === 'emailsSentCount' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('newLeadsContactedCount')}
+              >
+                Leads
+                <SortIcon active={sortKey === 'newLeadsContactedCount'} order={sortKey === 'newLeadsContactedCount' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('replyCount')}
+              >
+                Replies
+                <SortIcon active={sortKey === 'replyCount'} order={sortKey === 'replyCount' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('replyRate')}
+              >
+                Reply %
+                <SortIcon active={sortKey === 'replyRate'} order={sortKey === 'replyRate' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('positiveReplyRate')}
+              >
+                Positive %
+                <SortIcon active={sortKey === 'positiveReplyRate'} order={sortKey === 'positiveReplyRate' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('bounceRate')}
+              >
+                Bounce %
+                <SortIcon active={sortKey === 'bounceRate'} order={sortKey === 'bounceRate' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('totalOpportunities')}
+              >
+                Opps
+                <SortIcon active={sortKey === 'totalOpportunities'} order={sortKey === 'totalOpportunities' ? sortOrder : 'asc'} />
+              </th>
+              <th
+                className="px-4 py-3 text-right text-xs font-medium text-[var(--muted-text)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] transition-colors"
+                onClick={() => handleSort('totalOpportunityValue')}
+              >
+                Value
+                <SortIcon active={sortKey === 'totalOpportunityValue'} order={sortKey === 'totalOpportunityValue' ? sortOrder : 'asc'} />
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--border)]">
+            {filteredAndSortedCampaigns.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="px-4 py-12 text-center text-[var(--muted-text)]">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  No campaigns found
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {filteredAndSortedCampaigns.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-[var(--muted-text)]">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    No campaigns found
-                  </td>
-                </tr>
-              ) : (
-                filteredAndSortedCampaigns.map((campaign) => {
-                  const statusInfo = STATUS_MAP[campaign.status] || STATUS_MAP[0];
-                  return (
-                    <tr
-                      key={campaign.id}
-                      className="hover:bg-[#2869b0]/5 transition-colors"
-                    >
-                      <td className="px-4 py-4">
-                        <span className="text-[var(--foreground)] text-sm font-medium">{campaign.name}</span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${statusInfo.bg} ${statusInfo.color}`}>
-                          {statusInfo.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-right text-[var(--muted-text)] text-sm">
-                        {campaign.emailsSentCount.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 text-right text-blue-400 text-sm font-medium">
-                        {campaign.newLeadsContactedCount.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm">
-                        <span className="text-emerald-400 font-medium">{campaign.replyCountUnique}</span>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <span className={`text-sm font-medium ${campaign.replyRate >= 2 ? 'text-emerald-400' :
-                          campaign.replyRate >= 1 ? 'text-amber-400' : 'text-[var(--muted-text)]'
-                          }`}>
-                          {campaign.replyRate.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <span className={`text-sm font-medium ${campaign.positiveReplyRate >= 20 ? 'text-emerald-400' :
-                          campaign.positiveReplyRate >= 10 ? 'text-amber-400' : 'text-[var(--muted-text)]'
-                          }`}>
-                          {campaign.positiveReplyRate.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <span className={`text-sm font-medium ${campaign.bounceRate > 5 ? 'text-red-400' :
-                          campaign.bounceRate > 2 ? 'text-amber-400' : 'text-[var(--muted-text)]'
-                          }`}>
-                          {campaign.bounceRate.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <span className={`text-sm font-medium ${campaign.totalOpportunities > 0 ? 'text-amber-400' : 'text-[var(--muted-text)]'}`}>
-                          {campaign.totalOpportunities}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <span className={`text-sm font-semibold ${campaign.totalOpportunityValue > 0 ? 'text-emerald-400' : 'text-[var(--muted-text)]'}`}>
-                          ${campaign.totalOpportunityValue.toLocaleString()}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+            ) : (
+              filteredAndSortedCampaigns.map((campaign) => {
+                const statusInfo = STATUS_MAP[campaign.status] || STATUS_MAP[0];
+                return (
+                  <tr
+                    key={campaign.id}
+                    className="hover:bg-[#2869b0]/5 transition-colors"
+                  >
+                    <td className="px-4 py-4">
+                      <span className="text-[var(--foreground)] text-sm font-medium">{campaign.name}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${statusInfo.bg} ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right text-[var(--muted-text)] text-sm">
+                      {campaign.emailsSentCount.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4 text-right text-blue-400 text-sm font-medium">
+                      {campaign.newLeadsContactedCount.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4 text-right text-sm">
+                      <span className="text-emerald-400 font-medium">{campaign.replyCountUnique}</span>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <span className={`text-sm font-medium ${campaign.replyRate >= 2 ? 'text-emerald-400' :
+                        campaign.replyRate >= 1 ? 'text-amber-400' : 'text-[var(--muted-text)]'
+                        }`}>
+                        {campaign.replyRate.toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <span className={`text-sm font-medium ${campaign.positiveReplyRate >= 20 ? 'text-emerald-400' :
+                        campaign.positiveReplyRate >= 10 ? 'text-amber-400' : 'text-[var(--muted-text)]'
+                        }`}>
+                        {campaign.positiveReplyRate.toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <span className={`text-sm font-medium ${campaign.bounceRate > 5 ? 'text-red-400' :
+                        campaign.bounceRate > 2 ? 'text-amber-400' : 'text-[var(--muted-text)]'
+                        }`}>
+                        {campaign.bounceRate.toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <span className={`text-sm font-medium ${campaign.totalOpportunities > 0 ? 'text-amber-400' : 'text-[var(--muted-text)]'}`}>
+                        {campaign.totalOpportunities}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <span className={`text-sm font-semibold ${campaign.totalOpportunityValue > 0 ? 'text-emerald-400' : 'text-[var(--muted-text)]'}`}>
+                        ${campaign.totalOpportunityValue.toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--background)]">
-          <p className="text-xs text-[var(--muted-text)]">
-            Showing {filteredAndSortedCampaigns.length} of {campaigns.length} campaigns
-          </p>
-        </div>
+      {/* Footer */}
+      <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--background)]">
+        <p className="text-xs text-[var(--muted-text)]">
+          Showing {filteredAndSortedCampaigns.length} of {campaigns.length} campaigns
+        </p>
       </div>
     </div>
   );
