@@ -213,7 +213,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
       <div className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] overflow-hidden">
         <div className="p-6 space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-[#262626] rounded-lg shimmer" />
+            <div key={i} className="h-16 bg-[var(--secondary-muted)] rounded-lg shimmer" />
           ))}
         </div>
       </div>
@@ -258,7 +258,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis
                   dataKey="name"
                   tick={{ fill: '#666', fontSize: 10 }}
@@ -282,7 +282,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis
                   dataKey="name"
                   tick={{ fill: '#666', fontSize: 10 }}
@@ -306,7 +306,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis
                   dataKey="name"
                   tick={{ fill: '#666', fontSize: 10 }}
@@ -348,8 +348,8 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1a1a1a',
-                    border: '1px solid #262626',
+                    backgroundColor: 'var(--card-background)',
+                    border: '1px solid var(--border)',
                     borderRadius: '8px'
                   }}
                 />
@@ -393,7 +393,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
                   onClick={() => setStatusFilter(f.value)}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${statusFilter === f.value
                     ? 'bg-[#2869b0] text-[var(--foreground)]'
-                    : 'text-[var(--muted-text)] hover:text-[var(--foreground)] hover:bg-[#262626]'
+                    : 'text-[var(--muted-text)] hover:text-[var(--foreground)] hover:bg-[var(--secondary-muted)]'
                     }`}
                 >
                   {f.label}
@@ -479,7 +479,7 @@ export function CampaignsView({ campaigns, loading }: CampaignsViewProps) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#262626]">
+            <tbody className="divide-y divide-[var(--border)]">
               {filteredAndSortedCampaigns.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-4 py-12 text-center text-[var(--muted-text)]">

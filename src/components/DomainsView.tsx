@@ -23,10 +23,10 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
             className="rounded-xl border border-[var(--border)] bg-[var(--card-background)] p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="h-6 w-32 bg-[#262626] rounded shimmer" />
-              <div className="h-6 w-16 bg-[#262626] rounded shimmer" />
+              <div className="h-6 w-32 bg-[var(--secondary-muted)] rounded shimmer" />
+              <div className="h-6 w-16 bg-[var(--secondary-muted)] rounded shimmer" />
             </div>
-            <div className="h-10 w-24 bg-[#262626] rounded shimmer" />
+            <div className="h-10 w-24 bg-[var(--secondary-muted)] rounded shimmer" />
           </div>
         ))}
       </div>
@@ -83,7 +83,7 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
 
               {/* Score distribution bar */}
               <div className="flex-1 ml-6">
-                <div className="flex h-2 rounded-full overflow-hidden bg-[#262626]">
+                <div className="flex h-2 rounded-full overflow-hidden bg-[var(--border)]">
                   {domain.accounts.length > 0 && (() => {
                     const healthy = domain.accounts.filter(a => a.warmupScore >= 97).length;
                     const warning = domain.accounts.filter(a => a.warmupScore >= 90 && a.warmupScore < 97).length;
@@ -131,7 +131,7 @@ export function DomainsView({ domains, loading }: DomainsViewProps) {
                     .map((account) => (
                       <div
                         key={account.email}
-                        className="flex items-center justify-between text-sm py-1.5 px-2 rounded-lg hover:bg-[#262626]/50"
+                        className="flex items-center justify-between text-sm py-1.5 px-2 rounded-lg hover:bg-[var(--secondary-muted)]"
                       >
                         <span className="text-[var(--muted-text)] truncate flex-1 mr-2">{account.email}</span>
                         <span className={`font-medium ${getScoreColor(account.warmupScore)}`}>

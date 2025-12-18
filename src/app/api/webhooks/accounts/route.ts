@@ -58,7 +58,16 @@ export async function POST(request: NextRequest) {
 
         // Process each email account
         for (const item of items) {
-            const domainName = extractDomain(item.tracking_domain_name);
+            let domainName = extractDomain(item.tracking_domain_name);
+
+            // Fallback to email domain if tracking domain is unknown/missing
+            if (domainName === 'unknown' || !domainName) {
+                const emailDomain = item.email.split('@')[1];
+                if (emailDomain) {
+                    domainName = emailDomain;
+                }
+            }
+
             const warmupScore = item.stat_warmup_score ?? 100;
 
             // Find or create domain
@@ -213,6 +222,15 @@ export async function POST(request: NextRequest) {
             where: {
                 email: {
                     notIn: payloadEmails
+                }
+            }
+        });
+
+        // Delete domains that have no accounts left
+        await prisma.domain.deleteMany({
+            where: {
+                accounts: {
+                    none: {}
                 }
             }
         });

@@ -106,7 +106,7 @@ export default function Dashboard() {
               <button
                 onClick={fetchData}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--card-background)] border border-[#262626] text-[var(--muted-text)] hover:text-[#2869b0] hover:border-[#2869b0]/50 transition-all duration-300 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--card-background)] border border-[var(--border)] text-[var(--muted-text)] hover:text-[var(--primary)] hover:border-[var(--primary)]/50 transition-all duration-300 disabled:opacity-50"
               >
                 <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -125,14 +125,14 @@ export default function Dashboard() {
           </section>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 mb-6 p-1 bg-[var(--card-background)] rounded-xl border border-[#262626] w-fit overflow-x-auto">
+          <div className="flex items-center gap-1 mb-6 p-1 bg-[var(--card-background)] rounded-xl border border-[var(--border)] w-fit overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
-                  ? 'bg-gradient-to-r from-[#2869b0] to-[#4a8ad4] text-[var(--foreground)] shadow-lg shadow-[#2869b0]/20'
-                  : 'text-[var(--muted-text)] hover:text-[var(--foreground)] hover:bg-[#262626]'
+                  ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] text-[var(--foreground)] shadow-lg shadow-[var(--primary)]/20'
+                  : 'text-[var(--muted-text)] hover:text-[var(--foreground)] hover:bg-[var(--secondary-muted)]'
                   }`}
               >
                 {tab.label}
@@ -140,7 +140,7 @@ export default function Dashboard() {
                   <span
                     className={`px-2 py-0.5 rounded-full text-xs font-medium ${activeTab === tab.id
                       ? 'bg-white/20 text-[var(--foreground)]'
-                      : 'bg-[#262626] text-[var(--muted-text)]'
+                      : 'bg-[var(--secondary-muted)] text-[var(--muted-text)]'
                       }`}
                   >
                     {tab.count}
