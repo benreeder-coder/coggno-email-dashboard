@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
+        const syncStartTime = new Date();
 
         // Recursive function to find campaigns
         const findCampaigns = (data: any): any[] => {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
                     completedCount: campaign.completed_count,
                     totalOpportunities: campaign.total_opportunities,
                     totalOpportunityValue: campaign.total_opportunity_value,
-                    lastSyncedAt: new Date(),
+                    lastSyncedAt: syncStartTime,
                 },
                 create: {
                     campaignId: campaign.campaign_id,
@@ -99,16 +100,18 @@ export async function POST(request: NextRequest) {
                     completedCount: campaign.completed_count,
                     totalOpportunities: campaign.total_opportunities,
                     totalOpportunityValue: campaign.total_opportunity_value,
+                    lastSyncedAt: syncStartTime,
                 },
             });
         }
 
-        // Delete campaigns that are not in the payload (Full Sync)
-        const payloadCampaignIds = campaigns.map(c => c.campaign_id);
+        // ---------------------------------------------------------
+        // CLEANUP: Timestamp-based deletion
+        // ---------------------------------------------------------
         await prisma.campaign.deleteMany({
             where: {
-                campaignId: {
-                    notIn: payloadCampaignIds
+                lastSyncedAt: {
+                    lt: syncStartTime
                 }
             }
         });

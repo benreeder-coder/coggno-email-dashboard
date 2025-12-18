@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
+        const syncStartTime = new Date(); // Mark the start of the sync
 
         // Recursive function to find items with email
         const findItems = (data: any): any[] => {
@@ -41,7 +42,6 @@ export async function POST(request: NextRequest) {
                 if (data.items && Array.isArray(data.items)) {
                     return findItems(data.items);
                 }
-                // Handle case where n8n might wrap in other keys, but mainly look for 'items' or direct array
             }
             return [];
         };
@@ -60,11 +60,13 @@ export async function POST(request: NextRequest) {
         for (const item of items) {
             let domainName = extractDomain(item.tracking_domain_name);
 
-            // Fallback to email domain if tracking domain is unknown/missing
-            if (domainName === 'unknown' || !domainName) {
-                const emailDomain = item.email.split('@')[1];
-                if (emailDomain) {
-                    domainName = emailDomain;
+            // Robust fallback: if domain is unknown/missing, parse from email
+            if (!domainName || domainName.toLowerCase() === 'unknown') {
+                const emailParts = item.email.split('@');
+                if (emailParts.length === 2 && emailParts[1]) {
+                    domainName = emailParts[1].toLowerCase();
+                } else {
+                    domainName = 'unknown';
                 }
             }
 
@@ -101,7 +103,7 @@ export async function POST(request: NextRequest) {
                     previousScore: previousScore ?? warmupScore,
                     timestampCreated: item.timestamp_created ? new Date(item.timestamp_created) : undefined,
                     timestampUpdated: item.timestamp_updated ? new Date(item.timestamp_updated) : undefined,
-                    lastSyncedAt: new Date(),
+                    lastSyncedAt: syncStartTime, // Update sync time
                     domainId: domain.id,
                 },
                 create: {
@@ -114,6 +116,7 @@ export async function POST(request: NextRequest) {
                     warmupScore,
                     timestampCreated: item.timestamp_created ? new Date(item.timestamp_created) : undefined,
                     timestampUpdated: item.timestamp_updated ? new Date(item.timestamp_updated) : undefined,
+                    lastSyncedAt: syncStartTime, // Set sync time
                     domainId: domain.id,
                 },
             });
@@ -192,13 +195,12 @@ export async function POST(request: NextRequest) {
                 timestamp: new Date().toISOString(),
             });
 
-            // Update alerts with email sent status
             if (emailSent) {
                 await prisma.alert.updateMany({
                     where: {
                         emailSent: false,
                         createdAt: {
-                            gte: new Date(Date.now() - 60000), // Last minute
+                            gte: new Date(Date.now() - 60000),
                         },
                     },
                     data: {
@@ -216,17 +218,20 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Delete accounts that are not in the payload (Full Sync)
-        const payloadEmails = items.map(item => item.email);
+        // ---------------------------------------------------------
+        // CLEANUP: Timestamp-based deletion (Delete anything not synced just now)
+        // ---------------------------------------------------------
+
+        // 1. Delete accounts that were NOT updated in this sync batch
         await prisma.emailAccount.deleteMany({
             where: {
-                email: {
-                    notIn: payloadEmails
+                lastSyncedAt: {
+                    lt: syncStartTime
                 }
             }
         });
 
-        // Delete domains that have no accounts left
+        // 2. Delete domains that have no accounts left
         await prisma.domain.deleteMany({
             where: {
                 accounts: {
