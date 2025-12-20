@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         }
 
         // ---------------------------------------------------------
-        // CLEANUP: Timestamp-based deletion
+        // CLEANUP: Delete campaigns not in current sync
         // ---------------------------------------------------------
         await prisma.campaign.deleteMany({
             where: {
